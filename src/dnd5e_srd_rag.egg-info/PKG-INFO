@@ -1,0 +1,25 @@
+Metadata-Version: 2.4
+Name: dnd5e-srd-rag
+Version: 0.1.0
+Summary: A minimal RAG project for D&D SRD v5.2.1 rules question answering.
+Author: dnd5e-srd-rag contributors
+License: MIT
+Project-URL: Source, https://github.com/
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+License-File: LICENSE
+License-File: NOTICE.md
+Requires-Dist: chromadb>=0.5
+Requires-Dist: pymupdf>=1.24
+Requires-Dist: python-dotenv>=1.0
+Requires-Dist: sentence-transformers>=3.0
+Requires-Dist: transformers>=4.51.0
+Dynamic: license-file
+
+# dnd5e-srd-rag
+
+这是一份基于DnD SRD v5.2.1 RAG程序的DEMO。
+
+This is a demo for DnD RAG, based on System Reference Document v5.2.1.
+
+------

@@ -1,6 +1,7 @@
-"""项目配置 和 SRD 元数据."""
-
-"""Project configuration and SRD metadata."""
+"""
+项目配置 和 SRD 元数据.
+Project configuration and SRD metadata.
+"""
 
 from __future__ import annotations
 
@@ -11,7 +12,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 DATA_DIR = PROJECT_ROOT / "data"
 RAW_DATA_DIR = DATA_DIR / "raw"
@@ -22,6 +23,17 @@ INDEXES_DIR = DATA_DIR / "indexes"
 
 SRD_VERSION = "5.2.1"
 SRD_LANGUAGE = "en"
+SRD_RULESET = "DnD 5.5e"
+SRD_DOCUMENT_TITLE = "DnD System Reference Document"
+SRD_SOURCE = "DnD SRD"
+SRD_SOURCE_URL = "https://www.dndbeyond.com/srd"
+SRD_PDF_URL = (
+    "https://media.dndbeyond.com/compendium-images/srd/5.2.1/"
+    "SRD_CC_v5.2.1.pdf"
+)
+SRD_LICENSE = "CC-BY-4.0"
+SRD_PUBLISHED_DATE = "2025-05-01"
+SRD_PAGE_LAST_UPDATED = "2026-03-02"
 
 DEFAULT_PDF_PATH = RAW_DATA_DIR / "SRD_CC_v5.2.1.pdf"
 DEFAULT_EXTRACTED_PAGES_PATH = EXTRACTED_DATA_DIR / "srd-5.2.1-pages.jsonl"

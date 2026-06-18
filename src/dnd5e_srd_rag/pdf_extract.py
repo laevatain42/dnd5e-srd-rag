@@ -1,6 +1,7 @@
-"""PDF 文字提取工具."""
-
-"""PDF text extraction utilities."""
+"""
+PDF 文字提取工具.
+PDF text extraction utilities.
+"""
 
 from __future__ import annotations
 
