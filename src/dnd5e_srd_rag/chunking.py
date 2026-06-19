@@ -1,5 +1,5 @@
 """
-从JSONL拆分Chunk
+从PAGE的JSONL拆分Chunk
 Chunk extracted SRD pages for retrieval.
 """
 
@@ -12,9 +12,54 @@ from typing import Any
 from dnd5e_srd_rag import config
 
 # Chunk 大小
-DEFAULT_CHUNK_SIZE = 3200
+DEFAULT_CHUNK_SIZE = 1800
 # Chunk 重叠部分大小，确保上下文连续性
-DEFAULT_CHUNK_OVERLAP = 400
+DEFAULT_CHUNK_OVERLAP = 200
+
+# 从文本尾部截取指定长度，并尽量从完整单词开始。
+def take_text_tail(text: str, max_length: int) -> str:
+    if max_length <= 0:
+        return ""
+
+    text = " ".join(text.split())
+
+    if len(text) <= max_length:
+        return text
+
+    tail = text[-max_length:].strip()
+    first_space = tail.find(" ")
+
+    if first_space == -1:
+        return tail
+
+    return tail[first_space + 1 :].strip()
+
+# 从上一个 chunk 中取完整句子作为 overlap，避免从单词中间截断。
+def build_overlap_text(text: str, chunk_overlap: int) -> str:
+    if chunk_overlap <= 0:
+        return ""
+
+    units = split_sentences(text)
+    selected: list[str] = []
+    total_length = 0
+
+    for unit in reversed(units):
+        unit_length = len(unit) + (1 if selected else 0)
+
+        if unit_length > chunk_overlap and not selected:
+            return take_text_tail(unit, chunk_overlap)
+
+        if selected and total_length + unit_length > chunk_overlap:
+            break
+
+        selected.append(unit)
+        total_length += unit_length
+
+        if total_length >= chunk_overlap:
+            break
+
+    selected.reverse()
+    return " ".join(selected).strip()
 
 # 转换句子为chunk-id友好的slug
 def slugify(value: str | None) -> str:
@@ -28,18 +73,63 @@ def slugify(value: str | None) -> str:
 
     return value or "unknown"
 
-# 分割文本为重叠的chunk
-def split_text(
-    text: str,
-    chunk_size: int = DEFAULT_CHUNK_SIZE,
-    chunk_overlap: int = DEFAULT_CHUNK_OVERLAP,
-) -> list[str]:
-    """Split text into overlapping character chunks."""
+# 把一段文本拆成句子，尽量避免 chunk 在句子中间断开。
+def split_sentences(text: str) -> list[str]:
     text = " ".join(text.split())
 
     if not text:
         return []
 
+    return re.split(r"(?<=[.!?])\s+(?=[A-Z0-9“\"'])", text)
+
+# 把文本拆成适合组装 chunk 的单位：标题行或句子。
+def split_units(text: str) -> list[str]:
+    units = []
+
+    for line in text.splitlines():
+        line = " ".join(line.split())
+
+        if not line:
+            continue
+
+        if re.match(r"^Level \d+:", line):
+            units.append(line)
+            continue
+
+        units.extend(split_sentences(line))
+
+    return [unit for unit in units if unit]
+
+# 把单个超长文本片段按字符切开，作为兜底方案。
+def split_long_text(
+    text: str,
+    chunk_size: int,
+    chunk_overlap: int,
+) -> list[str]:
+    """把单个超长文本片段按字符切开，作为兜底方案。"""
+    if not text:
+        return []
+
+    chunks = []
+    start = 0
+
+    while start < len(text):
+        end = min(start + chunk_size, len(text))
+        chunks.append(text[start:end].strip())
+
+        if end == len(text):
+            break
+
+        start = end - chunk_overlap
+
+    return [chunk for chunk in chunks if chunk]
+
+# 分割文本为重叠的chunks，按句子累积生成 chunks，尽量不在句子中间切断。
+def split_text(
+    text: str,
+    chunk_size: int = DEFAULT_CHUNK_SIZE,
+    chunk_overlap: int = DEFAULT_CHUNK_OVERLAP,
+) -> list[str]:
     if chunk_size <= 0:
         raise ValueError("chunk_size must be greater than 0")
 
@@ -49,17 +139,35 @@ def split_text(
     if chunk_overlap >= chunk_size:
         raise ValueError("chunk_overlap must be smaller than chunk_size")
 
+    units = split_units(text)
+
     chunks = []
-    start = 0
+    current = ""
 
-    while start < len(text):
-        end = min(start + chunk_size, len(text))
-        chunks.append(text[start:end])
+    for unit in units:
+        if len(unit) > chunk_size:
+            if current:
+                chunks.append(current.strip())
+                current = ""
 
-        if end == len(text):
-            break
+            chunks.extend(split_long_text(unit, chunk_size, chunk_overlap))
+            continue
 
-        start = end - chunk_overlap
+        candidate = f"{current} {unit}".strip()
+
+        if len(candidate) <= chunk_size:
+            current = candidate
+            continue
+
+        if current:
+            chunks.append(current.strip())
+
+        overlap_text = build_overlap_text(chunks[-1], chunk_overlap) if chunks else ""
+        current = f"{overlap_text} {unit}".strip() if overlap_text else unit
+
+
+    if current:
+        chunks.append(current.strip())
 
     return chunks
 

@@ -1,6 +1,7 @@
 """
 JSONL to chunks
-Chunk extracted SRD pages into JSONL."""
+Chunk extracted SRD pages into JSONL.
+"""
 
 from __future__ import annotations
 

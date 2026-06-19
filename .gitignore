@@ -9,10 +9,13 @@ data/vectorstores/*
 !data/vectorstores/.gitkeep
 data/indexes/*
 !data/indexes/.gitkeep
+tests/test.json
 
 # Python
 __pycache__/
 *.py[cod]
+*.egg-info/
+**/*.egg-info/
 .venv/
 venv/
 
