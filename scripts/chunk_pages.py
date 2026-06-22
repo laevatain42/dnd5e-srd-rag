@@ -25,7 +25,7 @@ def main() -> None:
     parser.add_argument(
         "--pages",
         type=Path,
-        default=config.DEFAULT_EXTRACTED_PAGES_PATH,
+        default=config.DEFAULT_ANNOTATED_PAGES_PATH,
         help="Path to extracted page JSONL.",
     )
     parser.add_argument(

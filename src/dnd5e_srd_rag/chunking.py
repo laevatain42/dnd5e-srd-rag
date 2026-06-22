@@ -222,6 +222,9 @@ def chunk_pages(
 ) -> Iterator[dict[str, Any]]:
     """Yield chunk records from extracted page records."""
     for page_record in page_records:
+        # 如果 include_in_rag 是 False，跳过这个页面，不生成 chunk。
+        if page_record.get("include_in_rag") is False:
+            continue
         page = page_record["page"]
         section = page_record.get("section")
         subsection = page_record.get("subsection")
