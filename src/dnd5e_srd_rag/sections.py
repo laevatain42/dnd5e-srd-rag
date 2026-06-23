@@ -33,6 +33,7 @@ def annotate_page_record(page_record: dict[str, Any]) -> dict[str, Any]:
     return {
         **page_record,
         "section": section_entry["section"],
+        "subsection": section_entry.get("subsection"),
         "include_in_rag": section_entry["include_in_rag"],
     }
 

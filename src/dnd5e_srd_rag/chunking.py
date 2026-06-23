@@ -12,7 +12,7 @@ from typing import Any
 from dnd5e_srd_rag import config
 
 # Chunk 大小
-DEFAULT_CHUNK_SIZE = 1800
+DEFAULT_CHUNK_SIZE = 1200
 # Chunk 重叠部分大小，确保上下文连续性
 DEFAULT_CHUNK_OVERLAP = 200
 
