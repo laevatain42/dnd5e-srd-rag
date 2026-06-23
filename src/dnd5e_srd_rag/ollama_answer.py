@@ -48,7 +48,7 @@ def build_messages(
         "Answer only from the provided SRD context. "
         "Do not use outside rules, house rules, or unsupported assumptions. "
         "If the context does not contain enough information, say that the current SRD context does not answer the question. "
-        "Cite sources using the source labels provided in the context."
+        "Do not write citations or a Sources section; the application will attach sources separately."
     )
 
     user_message = (
@@ -56,7 +56,7 @@ def build_messages(
         f"{context}\n\n"
         "Question:\n"
         f"{question}\n\n"
-        "Answer with a concise rules explanation, then include a Sources section."
+        "Answer with only a concise rules explanation."
     )
 
     return [
@@ -80,11 +80,7 @@ def answer_with_ollama(
     timeout: float = 180,
 ) -> str:
     if not records:
-        return (
-            "I could not find relevant SRD context for this question.\n\n"
-            "Sources:\n"
-            "- None"
-        )
+        return "I could not find relevant SRD context for this question."
 
     messages = build_messages(question, records)
 

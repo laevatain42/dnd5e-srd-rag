@@ -17,12 +17,12 @@ from dnd5e_srd_rag.retrieval import (
 )
 
 
-# 打印 sources，作为模型回答之后的确定性来源兜底。
+# 打印由程序生成的确定性 sources，不让模型自由生成来源。
 def print_sources(records: list[dict]) -> None:
     sources = unique_sources(records)
 
     print()
-    print("Retrieved Sources:")
+    print("Sources:")
 
     if not sources:
         print("- None")

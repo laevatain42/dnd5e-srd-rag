@@ -29,3 +29,5 @@ def test_build_messages_instructs_model_to_use_context_only() -> None:
     assert "Answer only from the provided SRD context" in messages[0]["content"]
     assert "What does Fire Bolt do?" in messages[1]["content"]
     assert "SRD context:" in messages[1]["content"]
+    assert "Do not write citations or a Sources section" in messages[0]["content"]
+    assert "include a Sources section" not in messages[1]["content"]
