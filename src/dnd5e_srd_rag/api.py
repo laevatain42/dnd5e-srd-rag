@@ -7,12 +7,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from dnd5e_srd_rag import config
 from dnd5e_srd_rag.chat_service import chat_with_srd
+from dnd5e_srd_rag.ollama_answer import OllamaAnswerError
 
 # 创建 FastAPI 应用，http://127.0.0.1:8000/docs会展示以下内容
 app = FastAPI(
@@ -54,11 +55,18 @@ def health() -> dict[str, str]:
 @app.post("/api/chat", response_model=ChatResponse)
 def chat(request: ChatRequest) -> ChatResponse:
     # 调用 chat_with_srd 函数处理请求，这里就是ollama，但具体是什么API不关心。
-    result = chat_with_srd(
-        question=request.question,
-        top_k=request.top_k,
-        section=request.section,
-        model=request.model,
-    )
+    # try捕获 OllamaAnswerError 异常，如果发生异常，返回503错误。
+    try:
+        result = chat_with_srd(
+            question=request.question,
+            top_k=request.top_k,
+            section=request.section,
+            model=request.model,
+        )
+    except OllamaAnswerError as error:
+        raise HTTPException(
+            status_code=503,
+            detail=str(error),
+        ) from error
 
     return ChatResponse(**result)
