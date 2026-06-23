@@ -23,6 +23,7 @@ PDF -> 抽取文本和页码 -> 标注章节 -> chunk -> embedding -> Chroma 检
 - 使用 `search.py` 做语义检索调试。
 - 使用 `ask.py` 输出引用式问答上下文和 sources。
 - 使用 `ask_ollama_llm.py` 调用本地 Ollama LLM 生成带来源的回答。
+- 使用 FastAPI 提供本地 HTTP API，供未来 Next.js 聊天 UI 调用。
 
 ### 数据源与授权
 
@@ -154,6 +155,67 @@ ollama pull llama3.1:8b
 ollama run llama3.1:8b
 ```
 
+### FastAPI 本地 API
+
+启动 API 服务：
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn dnd5e_srd_rag.api:app --reload
+```
+
+服务启动后，默认地址是：
+
+```text
+http://127.0.0.1:8000
+```
+
+健康检查：
+
+```text
+http://127.0.0.1:8000/health
+```
+
+自动 API 文档：
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+聊天接口：
+
+```text
+POST http://127.0.0.1:8000/api/chat
+```
+
+请求示例：
+
+```json
+{
+  "question": "What does Fire Bolt do?",
+  "top_k": 3,
+  "section": "Spells",
+  "model": "llama3.1:8b"
+}
+```
+
+响应示例：
+
+```json
+{
+  "answer": "Fire Bolt makes a ranged spell attack...",
+  "sources": [
+    {
+      "label": "SRD v5.2.1, p. 132, Spells, Spell Descriptions",
+      "page": 132,
+      "section": "Spells",
+      "subsection": "Spell Descriptions"
+    }
+  ]
+}
+```
+
+如果 Ollama 没有运行，`/api/chat` 会返回 `503 Service Unavailable`，并在 `detail` 字段中给出可读错误信息。
+
 ### 项目结构
 
 ```text
@@ -185,6 +247,8 @@ dnd5e-srd-rag/
     vector_store.py
     retrieval.py
     ollama_answer.py
+    chat_service.py
+    api.py
   tests/
 ```
 
@@ -200,6 +264,8 @@ ollama run llama3.1:8b
 ```
 
 如果你在 `.env` 中修改了 `OLLAMA_BASE_URL`，确认它和本地 Ollama 服务地址一致。
+
+通过 FastAPI 调用 `/api/chat` 时，如果 Ollama 没有运行，API 会返回 `503 Service Unavailable` 和包含错误说明的 JSON。
 
 **Ollama 提示模型不存在**
 
@@ -240,6 +306,7 @@ ollama pull llama3.1:8b
 
 - `ask.py` 不调用 LLM，只输出检索到的 SRD 上下文和来源。
 - `ask_ollama_llm.py` 调用本地 Ollama；回答质量取决于本地模型和检索上下文。
+- FastAPI API 默认不做流式输出；`/api/chat` 会等待完整回答后一次性返回 JSON。
 - `subsection` 目前基于页级目录 map；同一页多个小标题时，只能选择一个主要 subsection。
 - 前 4 页不进入 RAG。
 - 第一次加载 `Qwen/Qwen3-Embedding-0.6B` 时可能需要从 Hugging Face 下载模型。
@@ -270,6 +337,7 @@ PDF -> text and page extraction -> section annotation -> chunking -> embeddings 
 - Use `search.py` for semantic retrieval debugging.
 - Use `ask.py` for citation-style answer context and sources.
 - Use `ask_ollama_llm.py` to call a local Ollama LLM for sourced answers.
+- Use FastAPI to provide a local HTTP API for a future Next.js chat UI.
 
 ### Data Source and License
 
@@ -401,6 +469,67 @@ ollama pull llama3.1:8b
 ollama run llama3.1:8b
 ```
 
+### FastAPI Local API
+
+Start the API server:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn dnd5e_srd_rag.api:app --reload
+```
+
+After startup, the default base URL is:
+
+```text
+http://127.0.0.1:8000
+```
+
+Health check:
+
+```text
+http://127.0.0.1:8000/health
+```
+
+Auto-generated API docs:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+Chat endpoint:
+
+```text
+POST http://127.0.0.1:8000/api/chat
+```
+
+Example request:
+
+```json
+{
+  "question": "What does Fire Bolt do?",
+  "top_k": 3,
+  "section": "Spells",
+  "model": "llama3.1:8b"
+}
+```
+
+Example response:
+
+```json
+{
+  "answer": "Fire Bolt makes a ranged spell attack...",
+  "sources": [
+    {
+      "label": "SRD v5.2.1, p. 132, Spells, Spell Descriptions",
+      "page": 132,
+      "section": "Spells",
+      "subsection": "Spell Descriptions"
+    }
+  ]
+}
+```
+
+If Ollama is not running, `/api/chat` returns `503 Service Unavailable` with a readable error message in the `detail` field.
+
 ### Project Structure
 
 ```text
@@ -432,6 +561,8 @@ dnd5e-srd-rag/
     vector_store.py
     retrieval.py
     ollama_answer.py
+    chat_service.py
+    api.py
   tests/
 ```
 
@@ -447,6 +578,8 @@ ollama run llama3.1:8b
 ```
 
 If you changed `OLLAMA_BASE_URL` in `.env`, make sure it matches your local Ollama service URL.
+
+When calling `/api/chat` through FastAPI, a stopped Ollama service returns `503 Service Unavailable` with a JSON error message.
 
 **Ollama says the model does not exist**
 
@@ -487,6 +620,7 @@ Also make sure `data/raw/SRD_CC_v5.2.1.pdf` exists.
 
 - `ask.py` does not call an LLM; it prints retrieved SRD context and sources.
 - `ask_ollama_llm.py` calls local Ollama; answer quality depends on the local model and retrieved context.
+- The FastAPI API is not streaming yet; `/api/chat` waits for a full answer and returns one JSON response.
 - `subsection` is currently based on a page-level table-of-contents map. If multiple headings appear on one page, only one primary subsection can be assigned.
 - Pages 1-4 are excluded from RAG.
 - The first load of `Qwen/Qwen3-Embedding-0.6B` may download the model from Hugging Face.

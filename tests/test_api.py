@@ -31,6 +31,9 @@ def test_chat_returns_answer_and_sources(monkeypatch) -> None:
             "sources": [
                 {
                     "label": "SRD v5.2.1, p. 132, Spells, Spell Descriptions",
+                    "page": 132,
+                    "section": "Spells",
+                    "subsection": "Spell Descriptions",
                 }
             ],
         }
@@ -53,6 +56,9 @@ def test_chat_returns_answer_and_sources(monkeypatch) -> None:
         "sources": [
             {
                 "label": "SRD v5.2.1, p. 132, Spells, Spell Descriptions",
+                "page": 132,
+                "section": "Spells",
+                "subsection": "Spell Descriptions",
             }
         ],
     }

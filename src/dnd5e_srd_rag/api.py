@@ -5,8 +5,6 @@ FastAPI app for the D&D SRD RAG service.
 
 from __future__ import annotations
 
-from typing import Any
-
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -41,10 +39,17 @@ class ChatRequest(BaseModel):
     section: str | None = None # 可选section过滤，因为现在不是很准确。
     model: str = config.DEFAULT_OLLAMA_MODEL
 
+# 溯源的形式
+class SourceItem(BaseModel):
+    label: str
+    page: int | None = None
+    section: str | None = None
+    subsection: str | None = None
+
 # 返回的形式
 class ChatResponse(BaseModel):
     answer: str
-    sources: list[dict[str, Any]]
+    sources: list[SourceItem]
 
 # 检查接口健康
 @app.get("/health")
