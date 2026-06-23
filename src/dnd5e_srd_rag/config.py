@@ -48,3 +48,14 @@ DEFAULT_EMBEDDING_MODEL = os.getenv(
 )
 
 DEFAULT_TOP_K = int(os.getenv("TOP_K", "5"))
+
+# LLM 更新
+DEFAULT_OLLAMA_BASE_URL = os.getenv(
+    "OLLAMA_BASE_URL",
+    "http://localhost:11434",
+)
+
+DEFAULT_OLLAMA_MODEL = os.getenv(
+    "OLLAMA_MODEL",
+    "llama3.1:8b",
+)

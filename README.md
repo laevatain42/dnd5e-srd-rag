@@ -22,6 +22,7 @@ PDF -> 抽取文本和页码 -> 标注章节 -> chunk -> embedding -> Chroma 检
 - 使用 ChromaDB 建立本地向量索引。
 - 使用 `search.py` 做语义检索调试。
 - 使用 `ask.py` 输出引用式问答上下文和 sources。
+- 使用 `ask_ollama_llm.py` 调用本地 Ollama LLM 生成带来源的回答。
 
 ### 数据源与授权
 
@@ -120,6 +121,25 @@ PDF 文件被 `.gitignore` 忽略，不会提交到仓库。
 .\.venv\Scripts\python.exe scripts\ask.py "How does Cleric spellcasting work?" --top-k 3
 ```
 
+本地 Ollama LLM 回答：
+
+```powershell
+.\.venv\Scripts\python.exe scripts\ask_ollama_llm.py "What does Fire Bolt do?" --section Spells --top-k 3
+```
+
+显示实际传给 LLM 的检索上下文：
+
+```powershell
+.\.venv\Scripts\python.exe scripts\ask_ollama_llm.py "What does Fire Bolt do?" --section Spells --top-k 3 --show-context
+```
+
+`ask_ollama_llm.py` 需要本机已安装 Ollama，并已拉取配置中的模型，例如：
+
+```powershell
+ollama pull llama3.1:8b
+ollama run llama3.1:8b
+```
+
 ### 项目结构
 
 ```text
@@ -139,6 +159,7 @@ dnd5e-srd-rag/
     index_chunks.py
     search.py
     ask.py
+    ask_ollama_llm.py
   src/dnd5e_srd_rag/
     config.py
     pdf_extract.py
@@ -149,12 +170,14 @@ dnd5e-srd-rag/
     embeddings.py
     vector_store.py
     retrieval.py
+    ollama_answer.py
   tests/
 ```
 
 ### 当前限制
 
-- `ask.py` 目前不调用 LLM，只输出检索到的 SRD 上下文和来源。
+- `ask.py` 不调用 LLM，只输出检索到的 SRD 上下文和来源。
+- `ask_ollama_llm.py` 调用本地 Ollama；回答质量取决于本地模型和检索上下文。
 - `subsection` 目前基于页级目录 map；同一页多个小标题时，只能选择一个主要 subsection。
 - 前 4 页不进入 RAG。
 - 第一次加载 `Qwen/Qwen3-Embedding-0.6B` 时可能需要从 Hugging Face 下载模型。
@@ -184,6 +207,7 @@ PDF -> text and page extraction -> section annotation -> chunking -> embeddings 
 - Build a local ChromaDB vector index.
 - Use `search.py` for semantic retrieval debugging.
 - Use `ask.py` for citation-style answer context and sources.
+- Use `ask_ollama_llm.py` to call a local Ollama LLM for sourced answers.
 
 ### Data Source and License
 
@@ -282,6 +306,25 @@ Citation-style answer context:
 .\.venv\Scripts\python.exe scripts\ask.py "How does Cleric spellcasting work?" --top-k 3
 ```
 
+Local Ollama LLM answer:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\ask_ollama_llm.py "What does Fire Bolt do?" --section Spells --top-k 3
+```
+
+Show the retrieved context passed to the LLM:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\ask_ollama_llm.py "What does Fire Bolt do?" --section Spells --top-k 3 --show-context
+```
+
+`ask_ollama_llm.py` requires Ollama to be installed locally and the configured model to be available, for example:
+
+```powershell
+ollama pull llama3.1:8b
+ollama run llama3.1:8b
+```
+
 ### Project Structure
 
 ```text
@@ -301,6 +344,7 @@ dnd5e-srd-rag/
     index_chunks.py
     search.py
     ask.py
+    ask_ollama_llm.py
   src/dnd5e_srd_rag/
     config.py
     pdf_extract.py
@@ -311,12 +355,14 @@ dnd5e-srd-rag/
     embeddings.py
     vector_store.py
     retrieval.py
+    ollama_answer.py
   tests/
 ```
 
 ### Current Limitations
 
-- `ask.py` does not call an LLM yet; it prints retrieved SRD context and sources.
+- `ask.py` does not call an LLM; it prints retrieved SRD context and sources.
+- `ask_ollama_llm.py` calls local Ollama; answer quality depends on the local model and retrieved context.
 - `subsection` is currently based on a page-level table-of-contents map. If multiple headings appear on one page, only one primary subsection can be assigned.
 - Pages 1-4 are excluded from RAG.
 - The first load of `Qwen/Qwen3-Embedding-0.6B` may download the model from Hugging Face.
