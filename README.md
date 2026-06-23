@@ -71,6 +71,20 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
 .\.venv\Scripts\Activate.ps1
 ```
 
+可选：复制 `.env.example` 为 `.env` 来覆盖默认配置：
+
+```powershell
+Copy-Item .env.example .env
+```
+
+当前支持的环境变量：
+
+- `EMBEDDING_MODEL`：embedding 模型，默认 `Qwen/Qwen3-Embedding-0.6B`。
+- `TOP_K`：默认检索 chunk 数量，默认 `5`。
+- `OLLAMA_BASE_URL`：本地 Ollama API 地址，默认 `http://localhost:11434`。
+- `OLLAMA_MODEL`：本地 Ollama 模型，默认 `llama3.1:8b`。
+- `HF_TOKEN`：可选，用于 Hugging Face 更高下载限额或私有模型。
+
 ### 准备 PDF
 
 把 SRD PDF 放到：
@@ -174,6 +188,54 @@ dnd5e-srd-rag/
   tests/
 ```
 
+### Troubleshooting
+
+**Ollama 连接失败**
+
+确认 Ollama 已安装并正在运行：
+
+```powershell
+ollama --version
+ollama run llama3.1:8b
+```
+
+如果你在 `.env` 中修改了 `OLLAMA_BASE_URL`，确认它和本地 Ollama 服务地址一致。
+
+**Ollama 提示模型不存在**
+
+先拉取模型：
+
+```powershell
+ollama pull llama3.1:8b
+```
+
+如果 `.env` 中设置了其他 `OLLAMA_MODEL`，把命令里的模型名替换成对应值。
+
+**Hugging Face 提示匿名请求 warning**
+
+这是下载公开模型时的限额提示，通常不影响运行。如果下载变慢或受限，可以设置 `HF_TOKEN`。
+
+**第一次运行 embedding 很慢**
+
+第一次加载 `Qwen/Qwen3-Embedding-0.6B` 会下载模型并初始化权重。后续运行会使用本地缓存，通常更快。
+
+**Chroma 或 pytest 出现 Python 3.14 warning**
+
+如果测试通过，这类 warning 多半来自第三方库兼容性提示，不代表项目代码失败。
+
+**检索结果为空或报找不到向量库**
+
+确认已经按顺序运行：
+
+```powershell
+.\.venv\Scripts\python.exe scripts\ingest_pdf.py
+.\.venv\Scripts\python.exe scripts\annotate_sections.py
+.\.venv\Scripts\python.exe scripts\chunk_pages.py
+.\.venv\Scripts\python.exe scripts\index_chunks.py --reset
+```
+
+并确认 `data/raw/SRD_CC_v5.2.1.pdf` 存在。
+
 ### 当前限制
 
 - `ask.py` 不调用 LLM，只输出检索到的 SRD 上下文和来源。
@@ -255,6 +317,20 @@ If PowerShell blocks activation scripts, allow them for the current process:
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
 .\.venv\Scripts\Activate.ps1
 ```
+
+Optional: copy `.env.example` to `.env` to override local defaults:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Supported environment variables:
+
+- `EMBEDDING_MODEL`: embedding model, default `Qwen/Qwen3-Embedding-0.6B`.
+- `TOP_K`: default number of chunks to retrieve, default `5`.
+- `OLLAMA_BASE_URL`: local Ollama API URL, default `http://localhost:11434`.
+- `OLLAMA_MODEL`: local Ollama model, default `llama3.1:8b`.
+- `HF_TOKEN`: optional Hugging Face token for higher rate limits or private models.
 
 ### Prepare the PDF
 
@@ -358,6 +434,54 @@ dnd5e-srd-rag/
     ollama_answer.py
   tests/
 ```
+
+### Troubleshooting
+
+**Ollama connection failed**
+
+Make sure Ollama is installed and running:
+
+```powershell
+ollama --version
+ollama run llama3.1:8b
+```
+
+If you changed `OLLAMA_BASE_URL` in `.env`, make sure it matches your local Ollama service URL.
+
+**Ollama says the model does not exist**
+
+Pull the model first:
+
+```powershell
+ollama pull llama3.1:8b
+```
+
+If `.env` sets a different `OLLAMA_MODEL`, replace the model name in the command.
+
+**Hugging Face shows an unauthenticated request warning**
+
+This is a rate-limit notice for public model downloads and usually does not block the app. If downloads are slow or limited, set `HF_TOKEN`.
+
+**The first embedding run is slow**
+
+The first load of `Qwen/Qwen3-Embedding-0.6B` downloads the model and initializes weights. Later runs usually use the local cache.
+
+**Chroma or pytest shows Python 3.14 warnings**
+
+If tests pass, these warnings are usually third-party compatibility notices, not project failures.
+
+**Search returns nothing or the vector store is missing**
+
+Make sure you have run the pipeline in order:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\ingest_pdf.py
+.\.venv\Scripts\python.exe scripts\annotate_sections.py
+.\.venv\Scripts\python.exe scripts\chunk_pages.py
+.\.venv\Scripts\python.exe scripts\index_chunks.py --reset
+```
+
+Also make sure `data/raw/SRD_CC_v5.2.1.pdf` exists.
 
 ### Current Limitations
 
